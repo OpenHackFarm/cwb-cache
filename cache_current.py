@@ -9,8 +9,11 @@ from influxdb import InfluxDBClient
 import dateutil
 import datetime
 from config import *
+import os
 
 LAST_UPDATE_CACHE_FILE = '_last_update_time_'
+
+dirname, filename = os.path.split(os.path.abspath(__file__))
 
 config = ConfigParser.RawConfigParser()
 
@@ -159,5 +162,5 @@ if __name__ == '__main__':
     fetch_dataset('O-A0002-001')  # 自動雨量站-雨量觀測資料
     fetch_dataset('O-A0003-001')  # 局屬氣象站-現在天氣觀測報告
 
-    with open(LAST_UPDATE_CACHE_FILE, 'wb') as configfile:
+    with open(os.path.join(dirname, LAST_UPDATE_CACHE_FILE), 'wb') as configfile:
         config.write(configfile)
