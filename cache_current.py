@@ -112,31 +112,32 @@ def fetch_dataset(dataset):
         if not config.has_option(dataset, l['stationId']):
             config.set(dataset, l['stationId'], '')
 
-        if l['time']['obsTime'] != config.set(dataset, l['stationId']):
+        if l['time']['obsTime'] != config.get(dataset, l['stationId']):
             config.set(dataset, l['stationId'], l['time']['obsTime'])
 
             print l['stationId'], l['locationName']
 
-        # create tags
-        tags = {}
-        tags['id'] = l['stationId']
-        tags['name'] = l['locationName']
-        tags['latitude'] = l['lat']
-        tags['longitude'] = l['lon']
-        for p in l['parameter']:
-            tags[p['parameterName']] = p['parameterValue']
+            # create tags
+            tags = {}
+            tags['id'] = l['stationId']
+            tags['name'] = l['locationName']
+            tags['latitude'] = l['lat']
+            tags['longitude'] = l['lon']
+            for p in l['parameter']:
+                tags[p['parameterName']] = p['parameterValue']
 
-        # create fields
-        fields = {}
-        for w in l['weatherElement']:
-            t = globals()[dataset.replace('-', '_') + '_type_mapping'][w['elementName']]
-            fields[w['elementName']] = globals()['convert_'+ t](w['elementValue'])
-        print fields
+            # create fields
+            fields = {}
+            for w in l['weatherElement']:
+                t = globals()[dataset.replace('-', '_') + '_type_mapping'][w['elementName']]
+                fields[w['elementName']] = globals()['convert_'+ t](w['elementValue'])
+            print fields
 
-        # convert to UTC timezone
-        dt = convert_datetime(l['time']['obsTime'])
+            # convert to UTC timezone
+            dt = convert_datetime(l['time']['obsTime'])
+            print dt
 
-        upload_to_influxdb(INFLUXDB_MEASUREMENT, tags, fields, dt)
+            upload_to_influxdb(INFLUXDB_MEASUREMENT, tags, fields, dt)
 
 
 def upload_to_influxdb(measurement, tags, fields, time):
