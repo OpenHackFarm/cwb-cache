@@ -143,15 +143,17 @@ def fetch_dataset(dataset):
             upload_to_influxdb(INFLUXDB_MEASUREMENT, tags, fields, dt)
 
 
-def upload_to_influxdb(measurement, tags, fields, time):
-    data = [
-        {
-            "measurement": measurement,
-            "tags": tags,
-            "time": time,
-            "fields": fields,
-        }
-    ]
+def upload_to_influxdb(measurement, tags, fields, time=None):
+    _ = {
+        "measurement": measurement,
+        "tags": tags,
+        "fields": fields
+    }
+    if time:
+        _['time'] = time
+
+    data = []
+    data.append(_)
 
     inClient.write_points(data)
 
