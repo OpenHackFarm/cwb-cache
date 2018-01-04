@@ -19,49 +19,49 @@ config = ConfigParser.RawConfigParser()
 
 inClient = InfluxDBClient(host=INFLUXDB_HOST, database=INFLUXDB_DATABASE)
 
-O_A0001_001_type_mapping = {
-    "ELEV": 'float',
-    "WDIR": 'int',
-    "WDSD": 'float',
-    "TEMP": 'float',
-    "HUMD": 'float',
-    "PRES": 'float',
-    "SUN": 'float',
-    "H_24R": 'float',
-    "H_FX": 'float',
-    "H_XD": 'int',
-    "H_FXT": 'int'
-}
-
-O_A0002_001_type_mapping = {
-    'ELEV': 'float',
-    'RAIN': 'float',
-    'MIN_10': 'float',
-    'HOUR_3': 'float',
-    'HOUR_6': 'float',
-    'HOUR_12': 'float',
-    'HOUR_24': 'float',
-    'NOW': 'float'
-}
-
-O_A0003_001_type_mapping = {
-    'ELEV': 'float',
-    'WDIR': 'int',
-    'WDSD': 'float',
-    'TEMP': 'float',
-    'HUMD': 'float',
-    'PRES': 'float',
-    '24R': 'float',
-    'H_FX': 'float',
-    'H_XD': 'int',
-    'H_FXT': 'int',
-    'H_F10': 'float',
-    'H_10D': 'int',
-    'H_F10T': 'int',
-    'H_UVI': 'int',
-    'D_TX': 'float',
-    'D_TXT': 'int',
-    'D_TS': 'float'
+type_mapping = {
+    'O_A0001_001': {
+        "ELEV": 'float',
+        "WDIR": 'int',
+        "WDSD": 'float',
+        "TEMP": 'float',
+        "HUMD": 'float',
+        "PRES": 'float',
+        "SUN": 'float',
+        "H_24R": 'float',
+        "H_FX": 'float',
+        "H_XD": 'int',
+        "H_FXT": 'int'
+    },
+    'O_A0002_001': {
+        'ELEV': 'float',
+        'RAIN': 'float',
+        'MIN_10': 'float',
+        'HOUR_3': 'float',
+        'HOUR_6': 'float',
+        'HOUR_12': 'float',
+        'HOUR_24': 'float',
+        'NOW': 'float'
+    },
+    'O_A0003_001': {
+        'ELEV': 'float',
+        'WDIR': 'int',
+        'WDSD': 'float',
+        'TEMP': 'float',
+        'HUMD': 'float',
+        'PRES': 'float',
+        '24R': 'float',
+        'H_FX': 'float',
+        'H_XD': 'int',
+        'H_FXT': 'int',
+        'H_F10': 'float',
+        'H_10D': 'int',
+        'H_F10T': 'int',
+        'H_UVI': 'int',
+        'D_TX': 'float',
+        'D_TXT': 'int',
+        'D_TS': 'float'
+    }
 }
 
 
@@ -99,7 +99,8 @@ def fetch_dataset(dataset):
     if not config.has_section(dataset):
         config.add_section(dataset)
 
-    r = requests.get('https://opendata.cwb.gov.tw/api/v1/rest/datastore/' + dataset, headers={"Authorization": CWB_AUTHORIZATION})
+    r = requests.get('https://opendata.cwb.gov.tw/api/v1/rest/datastore/' +
+                     dataset, headers={"Authorization": CWB_AUTHORIZATION})
 
     # print dir(r)
     # print r.json().keys()
@@ -110,6 +111,8 @@ def fetch_dataset(dataset):
     # print type(r.json()['records']['location'])
     # print r.json()['records']['location'][0].keys()
     # print r.json()['records']['location'][0]
+
+    print(r.text)
 
     for l in r.json()['records']['location']:
         if not config.has_option(dataset, l['stationId']):
@@ -131,9 +134,14 @@ def fetch_dataset(dataset):
 
             # create fields
             fields = {}
+            convert_map = {
+                'int': convert_int,
+                'float': convert_float,
+                'datetime': convert_datetime,
+            }
             for w in l['weatherElement']:
-                t = globals()[dataset.replace('-', '_') + '_type_mapping'][w['elementName']]
-                fields[w['elementName']] = globals()['convert_'+ t](w['elementValue'])
+                t = type_mapping[dataset.replace('-', '_')][w['elementName']]
+                fields[w['elementName']] = convert_map[t](w['elementValue'])
             print fields
 
             # convert to UTC timezone
@@ -144,18 +152,16 @@ def fetch_dataset(dataset):
 
 
 def upload_to_influxdb(measurement, tags, fields, time=None):
-    _ = {
+    data = {
         "measurement": measurement,
         "tags": tags,
         "fields": fields
     }
     if time:
-        _['time'] = time
+        data['time'] = time
 
-    data = []
-    data.append(_)
+    # inClient.write_points([data])
 
-    inClient.write_points(data)
 
 if __name__ == '__main__':
     config.read(LAST_UPDATE_CACHE_FILE)
