@@ -31,7 +31,11 @@ type_mapping = {
         "H_24R": 'float',
         "H_FX": 'float',
         "H_XD": 'int',
-        "H_FXT": 'int'
+        "H_FXT": 'int',
+        "D_TX": 'float',
+        "D_TXT": 'int',
+        "D_TN": 'float',
+        "D_TNT": 'int'
     },
     'O_A0002_001': {
         'ELEV': 'float',
@@ -60,7 +64,10 @@ type_mapping = {
         'H_UVI': 'int',
         'D_TX': 'float',
         'D_TXT': 'int',
-        'D_TS': 'float'
+        'D_TS': 'float',
+        'D_TN': 'float',
+        'D_TNT': 'int',
+        'H_VIS': 'int'
     }
 }
 
